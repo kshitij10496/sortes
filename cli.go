@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -15,15 +16,20 @@ const URL = "http://api.aeneid.eu/sortes"
 type Sortes struct {
 	Book          int      `json:"book,omitempty"`
 	NumberOfLines int      `json:"number_of_lines,omitempty"`
-	StartLine     int      `json:"start_line.omitempty"`
+	StartLine     int      `json:"start_line,omitempty"`
 	Text          []string `json:"text,omitempty"`
 	Version       string   `json:"version,omitempty"`
 }
 
+var (
+	flagVersion = flag.String("version", "dryden", `version`)
+	flagLines   = flag.Int("lines", 5, `number of lines to fetch`)
+	flagBook    = flag.Int("book", 0, `book number of Aeneid`)
+)
+
 func main() {
-	flagVersion := flag.String("version", "dryden", `version`)
-	flagLines := flag.Int("lines", 1, `number of lines to fetch`)
-	flagBook := flag.Int("book", 0, `book number of Aeneid`)
+
+	flag.Parse()
 
 	client := http.Client{Timeout: 5 * time.Second}
 
@@ -31,6 +37,15 @@ func main() {
 	if err != nil {
 		log.Fatal("Cannot create request:", err)
 	}
+
+	q := req.URL.Query()
+	q.Add("version", *flagVersion)
+	q.Add("lines", strconv.Itoa(*flagLines))
+	if *flagBook != 0 {
+		q.Add("book", strconv.Itoa(*flagBook))
+	}
+
+	req.URL.RawQuery = q.Encode()
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -50,5 +65,5 @@ func main() {
 		log.Fatal("Unable to decode the response:", err)
 	}
 
-	fmt.Println(strings.Join(content.Text, " "))
+	fmt.Println(strings.Join(content.Text, "\n"))
 }
