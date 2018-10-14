@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -28,7 +27,6 @@ var (
 )
 
 func main() {
-
 	flag.Parse()
 
 	client := http.Client{Timeout: 5 * time.Second}
@@ -65,5 +63,17 @@ func main() {
 		log.Fatal("Unable to decode the response:", err)
 	}
 
-	fmt.Println(strings.Join(content.Text, "\n"))
+	if content.NumberOfLines != *flagLines {
+		log.Fatal("Error from the server")
+	}
+
+	fmt.Println()
+	fmt.Printf("%25s %v\n", "BOOK", content.Book)
+	fmt.Println()
+	for i, text := range content.Text {
+		fmt.Printf("%4v %s\n", content.StartLine+i, text)
+	}
+	fmt.Println()
+	fmt.Printf("%50s: %s\n", "Aeneid", "Virgil")
+	fmt.Printf("%50s: %s\n", "version", content.Version)
 }
